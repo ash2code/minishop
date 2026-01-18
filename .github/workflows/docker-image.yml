@@ -7,12 +7,12 @@ on:
     branches: [ "main" ]
 
 jobs:
-
-  build:
-    name: Build and Push Docker Images
+  build-and-scan:
+    name: Build and Scan Docker Images
     runs-on: ubuntu-latest
+    
     steps:
-    - name: checkout the code
+    - name: Checkout the code
       uses: actions/checkout@v4
       
     - name: Set up Docker Buildx
@@ -29,6 +29,48 @@ jobs:
     
     - name: List built images
       run: docker images | grep mini-shop
-      
-      
 
+    - name: Scan Frontend Image
+      uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+      with:
+        image-ref: mini-shop-frontend:build-${{ github.run_number }}
+        format: 'sarif'
+        output: 'trivy-frontend-results.sarif'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Scan Products Service Image
+      uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+      with:
+        image-ref: mini-shop-products:build-${{ github.run_number }}
+        format: 'sarif'
+        output: 'trivy-products-results.sarif'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Scan Cart Service Image
+      uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+      with:
+        image-ref: mini-shop-cart:build-${{ github.run_number }}
+        format: 'sarif'
+        output: 'trivy-cart-results.sarif'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Upload Frontend scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-frontend-results.sarif'
+        category: 'frontend'
+
+    - name: Upload Products scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-products-results.sarif'
+        category: 'products'
+
+    - name: Upload Cart scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-cart-results.sarif'
+        category: 'cart'
