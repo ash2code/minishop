@@ -14,7 +14,21 @@ jobs:
     steps:
     - name: checkout the code
       uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build -t mini-shop-frontend:latest 
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Frontend
+      run: docker build -t mini-shop-frontend:build-${{ github.run_number }} ./frontend
+    
+    - name: Build Products Service
+      run: docker build -t mini-shop-products:build-${{ github.run_number }} ./products-service
+    
+    - name: Build Cart Service
+      run: docker build -t mini-shop-cart:build-${{ github.run_number }} ./cart-service
+    
+    - name: List built images
+      run: docker images | grep mini-shop
       
       
+
