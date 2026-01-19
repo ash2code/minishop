@@ -1,1 +1,1 @@
-# minishop
+# minishop project
